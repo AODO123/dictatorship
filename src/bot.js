@@ -22,17 +22,58 @@ client.on('messageCreate', async (message) => {
   if (message.author.bot) return;
 
   const content = message.content.trim();
-  let prefixUsed = null;
 
-  if (content.startsWith(PREFIX)) {
-    prefixUsed = PREFIX;
-  } else if (content.startsWith('.')) {
-    prefixUsed = '.';
+  // Translation command: strictly triggered by .tr
+  if (content.startsWith('.')) {
+    const args = content.slice(1).trim().split(/ +/);
+    const command = args.shift().toLowerCase();
+
+    if (command === 'tr' || command === 'translate' || command === 't') {
+      if (!message.reference || !message.reference.messageId) {
+        return message.reply('Please reply to a message you want to translate.');
+      }
+
+      let targetMessage;
+      try {
+        targetMessage = await message.channel.messages.fetch(message.reference.messageId);
+      } catch {
+        return message.reply('Could not fetch the replied message.');
+      }
+
+      const textToTranslate = targetMessage.content?.trim();
+      if (!textToTranslate) {
+        return message.reply('The replied message has no text to translate.');
+      }
+
+      await message.channel.sendTyping();
+
+      const result = await translateText(textToTranslate);
+      if (!result.success) {
+        return message.reply('Could not translate the message right now. Try again later.');
+      }
+
+      const sourceLang = result.from || 'Detected Language';
+      const cleanText = result.text.length > 4000 ? result.text.slice(0, 3995) + '...' : result.text;
+
+      const embed = new EmbedBuilder()
+        .setColor(0x5a65ea)
+        .setTitle(`${sourceLang} → English`)
+        .setDescription(cleanText)
+        .setFooter({
+          text: `Requested by ${message.author.username}`,
+          iconURL: message.author.displayAvatarURL()
+        })
+        .setTimestamp();
+
+      return message.reply({ embeds: [embed] });
+    }
+    return;
   }
 
-  if (!prefixUsed) return;
+  // Standard prefix commands (?def, ?ping, ?help)
+  if (!content.startsWith(PREFIX)) return;
 
-  const args = content.slice(prefixUsed.length).trim().split(/ +/);
+  const args = content.slice(PREFIX.length).trim().split(/ +/);
   const command = args.shift().toLowerCase();
 
   if (command === 'ping') {
@@ -53,46 +94,6 @@ client.on('messageCreate', async (message) => {
         { name: `\`${PREFIX}help\``, value: 'Show this help menu.' }
       )
       .setFooter({ text: 'Created by Costa' });
-
-    return message.reply({ embeds: [embed] });
-  }
-
-  if (command === 'tr' || command === 'translate' || command === 't') {
-    if (!message.reference || !message.reference.messageId) {
-      return message.reply('Please reply to a message you want to translate.');
-    }
-
-    let targetMessage;
-    try {
-      targetMessage = await message.channel.messages.fetch(message.reference.messageId);
-    } catch {
-      return message.reply('Could not fetch the replied message.');
-    }
-
-    const textToTranslate = targetMessage.content?.trim();
-    if (!textToTranslate) {
-      return message.reply('The replied message has no text to translate.');
-    }
-
-    await message.channel.sendTyping();
-
-    const result = await translateText(textToTranslate);
-    if (!result.success) {
-      return message.reply('Could not translate the message right now. Try again later.');
-    }
-
-    const sourceLang = result.from || 'Detected Language';
-    const cleanText = result.text.length > 4000 ? result.text.slice(0, 3995) + '...' : result.text;
-
-    const embed = new EmbedBuilder()
-      .setColor(0x5a65ea)
-      .setTitle(`${sourceLang} → English`)
-      .setDescription(cleanText)
-      .setFooter({
-        text: `Requested by ${message.author.username}`,
-        iconURL: message.author.displayAvatarURL()
-      })
-      .setTimestamp();
 
     return message.reply({ embeds: [embed] });
   }
