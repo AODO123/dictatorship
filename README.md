@@ -7,15 +7,15 @@ A small Discord bot for quick dictionary definitions and message translations. B
 ### 1. Dictionary (`?def <word>`)
 Look up any English word with definitions, part of speech, pronunciation, and usage examples.
 
-### 2. Translation (`?tr`)
-Reply to any message with `?tr` to detect the language and translate it directly into English.
+### 2. Translation (`.tr`)
+Reply to any message with `.tr` to detect the language and translate it directly into English.
 
 ## Commands
 
 | Command | Description |
 |---------|-------------|
 | `?def <word>` | Look up a word (aliases: `?define`, `?d`) |
-| `?tr` | Reply to any message to translate it into English (aliases: `?translate`, `?t`) |
+| `.tr` | Reply to any message to translate it into English (aliases: `.translate`, `.t`) |
 | `?ping` | Check latency |
 | `?help` | List commands |
 

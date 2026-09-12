@@ -15,13 +15,24 @@ const PREFIX = process.env.PREFIX || '?';
 
 client.once('ready', () => {
   console.log(`Dictatorship is online! Logged in as ${client.user.tag}`);
-  client.user.setActivity(`${PREFIX}def <word> | ${PREFIX}tr`, { type: 2 });
+  client.user.setActivity(`${PREFIX}def <word> | .tr`, { type: 2 });
 });
 
 client.on('messageCreate', async (message) => {
-  if (message.author.bot || !message.content.startsWith(PREFIX)) return;
+  if (message.author.bot) return;
 
-  const args = message.content.slice(PREFIX.length).trim().split(/ +/);
+  const content = message.content.trim();
+  let prefixUsed = null;
+
+  if (content.startsWith(PREFIX)) {
+    prefixUsed = PREFIX;
+  } else if (content.startsWith('.')) {
+    prefixUsed = '.';
+  }
+
+  if (!prefixUsed) return;
+
+  const args = content.slice(prefixUsed.length).trim().split(/ +/);
   const command = args.shift().toLowerCase();
 
   if (command === 'ping') {
@@ -37,7 +48,7 @@ client.on('messageCreate', async (message) => {
       .setDescription('A lightweight dictionary and translation bot for your server.')
       .addFields(
         { name: `\`${PREFIX}def <word>\``, value: 'Fetch definition, pronunciation, and examples.' },
-        { name: `\`${PREFIX}tr\``, value: 'Reply to any message with `?tr` to translate it into English.' },
+        { name: '`.tr`', value: 'Reply to any message with `.tr` to translate it into English.' },
         { name: `\`${PREFIX}ping\``, value: 'Check bot and API latency.' },
         { name: `\`${PREFIX}help\``, value: 'Show this help menu.' }
       )
@@ -75,9 +86,10 @@ client.on('messageCreate', async (message) => {
 
     const embed = new EmbedBuilder()
       .setColor(0x5a65ea)
+      .setTitle(`${sourceLang} → English`)
       .setDescription(cleanText)
       .setFooter({
-        text: `Requested by ${message.author.username} • ${sourceLang} → English`,
+        text: `Requested by ${message.author.username}`,
         iconURL: message.author.displayAvatarURL()
       })
       .setTimestamp();
