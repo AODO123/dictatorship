@@ -1,23 +1,21 @@
 # Dictatorship
 
-A small Discord bot that looks up dictionary definitions. Built for a private server.
+A small Discord bot for quick dictionary definitions and message translations. Built for Costa's private server.
 
-## What it does
+## Features
 
-Type `?def <word>` in any channel and the bot replies with an embed containing:
+### 1. Dictionary (`?def <word>`)
+Look up any English word with definitions, part of speech, pronunciation, and usage examples.
 
-- Part of speech
-- Definitions (up to 3 per part of speech)
-- Pronunciation (IPA + audio link when available)
-- Usage examples
-
-Uses the [Free Dictionary API](https://dictionaryapi.dev/) so there's no API key needed.
+### 2. Translation (`?tr`)
+Reply to any message with `?tr` to detect the language and translate it directly into English.
 
 ## Commands
 
 | Command | Description |
 |---------|-------------|
-| `?def <word>` | Look up a word (also accepts `?define` and `?d`) |
+| `?def <word>` | Look up a word (aliases: `?define`, `?d`) |
+| `?tr` | Reply to any message to translate it into English (aliases: `?translate`, `?t`) |
 | `?ping` | Check latency |
 | `?help` | List commands |
 
@@ -27,23 +25,23 @@ Uses the [Free Dictionary API](https://dictionaryapi.dev/) so there's no API key
 
 1. Clone the repo
 2. Install dependencies:
-   ```
+   ```bash
    npm install
    ```
 3. Copy `.env.example` to `.env` and add your bot token:
-   ```
+   ```bash
    cp .env.example .env
    ```
 4. Get a bot token from the [Discord Developer Portal](https://discord.com/developers/applications)
 5. Make sure your bot has the **Message Content Intent** enabled in the portal
 6. Run:
-   ```
+   ```bash
    npm start
    ```
 
 ## .env
 
-```
+```env
 BOT_TOKEN=your-bot-token-here
 PREFIX=?
 ```
@@ -57,6 +55,7 @@ dictatorship/
   src/
     bot.js          - main bot file
     dictionary.js   - dictionary API wrapper
+    translator.js   - translation & language detection
   .env.example
   .gitignore
   package.json

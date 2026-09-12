@@ -1,6 +1,7 @@
 require('dotenv').config();
 const { Client, GatewayIntentBits, EmbedBuilder } = require('discord.js');
 const { fetchDefinition } = require('./dictionary');
+const { translateText } = require('./translator');
 
 const client = new Client({
   intents: [
@@ -14,7 +15,7 @@ const PREFIX = process.env.PREFIX || '?';
 
 client.once('ready', () => {
   console.log(`Dictatorship is online! Logged in as ${client.user.tag}`);
-  client.user.setActivity(`${PREFIX}def <word>`, { type: 2 });
+  client.user.setActivity(`${PREFIX}def <word> | ${PREFIX}tr`, { type: 2 });
 });
 
 client.on('messageCreate', async (message) => {
@@ -33,13 +34,53 @@ client.on('messageCreate', async (message) => {
     const embed = new EmbedBuilder()
       .setColor(0x2f3136)
       .setTitle('Dictatorship Commands')
-      .setDescription('A lightweight dictionary bot for quick word definitions.')
+      .setDescription('A lightweight dictionary and translation bot for your server.')
       .addFields(
         { name: `\`${PREFIX}def <word>\``, value: 'Fetch definition, pronunciation, and examples.' },
+        { name: `\`${PREFIX}tr\``, value: 'Reply to any message with `?tr` to translate it into English.' },
         { name: `\`${PREFIX}ping\``, value: 'Check bot and API latency.' },
         { name: `\`${PREFIX}help\``, value: 'Show this help menu.' }
       )
       .setFooter({ text: 'Created by Costa' });
+
+    return message.reply({ embeds: [embed] });
+  }
+
+  if (command === 'tr' || command === 'translate' || command === 't') {
+    if (!message.reference || !message.reference.messageId) {
+      return message.reply('Please reply to a message you want to translate.');
+    }
+
+    let targetMessage;
+    try {
+      targetMessage = await message.channel.messages.fetch(message.reference.messageId);
+    } catch {
+      return message.reply('Could not fetch the replied message.');
+    }
+
+    const textToTranslate = targetMessage.content?.trim();
+    if (!textToTranslate) {
+      return message.reply('The replied message has no text to translate.');
+    }
+
+    await message.channel.sendTyping();
+
+    const result = await translateText(textToTranslate);
+    if (!result.success) {
+      return message.reply('Could not translate the message right now. Try again later.');
+    }
+
+    const sourceLang = result.from || 'Detected Language';
+    const cleanText = result.text.length > 4000 ? result.text.slice(0, 3995) + '...' : result.text;
+
+    const embed = new EmbedBuilder()
+      .setColor(0x5a65ea)
+      .setDescription(cleanText)
+      .setFooter({
+        text: `Requested by ${message.author.username} • ${sourceLang} → English`,
+        iconURL: message.author.displayAvatarURL()
+      })
+      .setTimestamp();
 
     return message.reply({ embeds: [embed] });
   }
@@ -49,6 +90,8 @@ client.on('messageCreate', async (message) => {
     if (!word) {
       return message.reply(`Please provide a word. Example: \`${PREFIX}def serendipity\``);
     }
+
+    await message.channel.sendTyping();
 
     const result = await fetchDefinition(word);
 
